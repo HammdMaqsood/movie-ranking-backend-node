@@ -14,7 +14,7 @@ exports.movie_save= (req, res, next) => {
     // Save the movie to the database
     const savedMovie =  newMovie.save();
 
-    res.status(201).json(savedMovie);
+    res.status(201).json('movie save Succesfully',savedMovie);
   } catch (error) {
     res.status(500).json({ error: 'Internal server error' });
   }
