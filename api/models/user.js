@@ -13,9 +13,15 @@ const userSchema = new mongoose.Schema({
     }
   },
   password: { type: String, required: true },
+  about: { type: String },
+  address: { type: String },
+  city: { type: String },
+  country: { type: String },
   profile: { type: String },
-  watchlist: [{ type: String }]
+  postalCode: { type: Number },
+  watchlist: [{ type: Number }]
 })
+userSchema.index({ email: 1 }, { unique: true })
 
 const User = mongoose.model('User', userSchema)
 
