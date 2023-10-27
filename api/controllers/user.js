@@ -140,22 +140,44 @@ exports.get_watchlist = async (req, res, next) => {
 }
 
 exports.update_user = async (req, res) => {
-  console.log(req.query.user);
+  const options = {
+    minLength: 8,
+    minLowercase: 1,
+    minUppercase: 1,
+    minNumbers: 1
+  }
   try {
     const userId = req.userData.userId;
     let user = await User.findOne({ _id: userId });
-
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
     let previousProfileImage;
+    const userUpdate = req.query.user;
+    user.firstName = userUpdate.firstName;
+    user.lastName = userUpdate.lastName;
+    user.email = userUpdate.email;
+    user.address = userUpdate.address;
+    user.city = userUpdate.city;
+    user.country = userUpdate.country;
+    user.postalCode = userUpdate.postalCode;
+    user.about = userUpdate.about;
+    user.watchlist = userUpdate.watchlist;
+    
+    if (userUpdate.password !== user.password) {
+      if (!isStrongPassword(userUpdate.password, options)) {
+        return res.status(400).json({ error: 'Password is not strong enough' });
+      }      
+      const hashedPassword = await bcrypt.hash(userUpdate.password, 10);
+      user.password = hashedPassword;
+    }
     if (req.file) {
       previousProfileImage = user.profile;
       user.profile = req.file.filename;
     }
     try {
       await user.save();
-      res.status(200).json({ message: 'Profile Image uploaded successfully' });
+      res.status(200).json({ message: 'User updated Succesfuly' });
       if (previousProfileImage) {
         try {
           fs.unlinkSync(`./uploads/${previousProfileImage}`);
@@ -164,7 +186,13 @@ exports.update_user = async (req, res) => {
         }
       }
     } catch (error) {
-      res.status(500).json({ error: 'Error Occurred While uploading Image' });
+      if (error.name === 'ValidationError') {
+        res.status(400).json({ error: error.message })
+      } else if (error.code === 11000) {
+        res.status(400).json({ error: 'Email already exists' })
+      } else {
+        res.status(500).json({ error: 'Internal server error' })
+      }
     }
   } catch (error) {
     res.status(500).json({ error: 'Internal server error' });

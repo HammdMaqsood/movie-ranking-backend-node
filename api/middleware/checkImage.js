@@ -4,18 +4,20 @@ const path = require('path');
 const storageEngine = multer.diskStorage({
   destination: './uploads',
   filename: (req, file, cb) => {
-    const userId = req.userData.userId
-    console.log('userId', userId)
+    const userId = req.userData.userId;
+    console.log('userId', userId);
     cb(null, `${req.userData.userId}-profile-${file.originalname}`);
-  }
+  },
 });
 
 const upload = multer({
   storage: storageEngine,
-  limits: { fileSize: 100000000 },
+  limits: { 
+    fileSize: 100000000 
+  },
   fileFilter: (req, file, cb) => {
     checkFileType(file, cb);
-  }
+  },
 });
 
 const checkFileType = (file, cb) => {
@@ -31,10 +33,6 @@ const checkFileType = (file, cb) => {
 };
 
 module.exports = (req, res, next) => {
-  console.log('req.file == ',req.file)
-  // if (!req.file) {
-  //   return next();
-  // }
   upload.single('image')(req, res, (err) => {
     if (err) {
       return res.status(400).json({ error: err });
