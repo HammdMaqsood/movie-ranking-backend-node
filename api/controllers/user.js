@@ -2,7 +2,8 @@ const User = require('../models/user')
 const bcrypt = require('bcrypt')
 const fs = require('fs');
 const { isStrongPassword } = require('validator')
-const jwt = require('jsonwebtoken')
+const jwt = require('jsonwebtoken');
+const { use } = require('../routes/user');
 
 exports.register_user = async (req, res, next) => {
   const options = {
@@ -87,39 +88,44 @@ exports.get_user_info = async (req, res, next) => {
 
 exports.add_watchlist = async (req, res, next) => {
   try {
-    const movieId = req.body.movieId
-    const userId = req.userData.userId
-    const user = await User.findOne({ _id: userId })
+    const { id, type } = req.body;
+    const userId = req.userData.userId;
+    const user = await User.findOne({ _id: userId });
+
     if (!user) {
-      return res.status(404).json({ error: 'User not found' })
+      return res.status(404).json({ error: 'User not found' });
     }
-    user.watchlist.push(movieId)
+    if(!id) return res.status(404).json({ error: 'Missing Id' });
+    if(!type) return res.status(404).json({ error: 'Missing type' });
+    user.watchlist.push({ type, id });
     try {
-      user.save()
-      res.status(200).json({ message: 'Movie added to watchlist'})
+      await user.save();
+      res.status(200).json({ message: 'Movie added to watchlist' });
     } catch (error) {
-      res.status(500).json({ error: 'user not saved' })
+      res.status(500).json({ error: 'User not saved' });
     }
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' })
+    res.status(500).json({ error: 'Internal server error' });
   }
-}
+};
 
 exports.remove_watchlist = async (req, res, next) => {
   try {
-    const movieId = req.body.movieId
+    const id = req.body.id
     const userId = req.userData.userId
     const user = await User.findOne({ _id: userId })
+    console.log('user', user)
+
     if (!user) {
       return res.status(404).json({ error: 'User not found' })
     }
-    const index = user.watchlist.indexOf(movieId)
+    const index = user.watchlist.findIndex((item) => item.id === id);
     if (index === -1) {
       return res.status(404).json({ error: 'Movie not found in watchlist' })
     }
     user.watchlist.splice(index, 1)
     await user.save()
-    res.status(200).json({ message: 'Movie removed from watchlist', user })
+    res.status(200).json({ message: 'Movie removed from watchlist' })
   } catch (error) {
     res.status(500).json({ error: 'Internal server error' })
   }
@@ -129,6 +135,7 @@ exports.get_watchlist = async (req, res, next) => {
   try {
     const userId = req.userData.userId
     const user = await User.findOne({ _id: userId })
+    console.log(user)
     if (!user) {
       return res.status(404).json({ error: 'User not found' })
     }

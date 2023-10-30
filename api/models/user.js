@@ -19,7 +19,10 @@ const userSchema = new mongoose.Schema({
   country: { type: String },
   profile: { type: String },
   postalCode: { type: Number },
-  watchlist: [{ type: Number }]
+  watchlist: [{ 
+    type: { type: String },
+    id: { type: Number }
+  }],
 })
 userSchema.index({ email: 1 }, { unique: true })
 
