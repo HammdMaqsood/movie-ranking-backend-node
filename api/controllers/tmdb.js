@@ -3,7 +3,7 @@ const User = require('../models/user')
 
 exports.get_tmdb_data = async (req, res, next) => {
   let user
-  if( req.userData?.userId) {
+  if( req.userData && req.userData.userId) {
     const userId = req.userData?.userId
      user = await User.findOne({ _id: userId })
   }
